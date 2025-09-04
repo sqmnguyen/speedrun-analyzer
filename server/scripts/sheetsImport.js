@@ -99,10 +99,11 @@ const main = async () => {
         if (!sheetId) continue;
 
         await client.query(sql, [
-            toInt(row[iId]),                         // $1 id
-            toInt(row[iId]),
-            toIso(row[iRunTs]),                   // $3 run_ts
-            parseHMS(row[iRta]),                // $4 rta_seconds
+            toInt(row[iId]),                    // $1 id
+            toInt(row[iId]),                    // $2 run number (remove in future migration, it's a repeat of id)
+            toIso(row[iRunTs]),                 // $3 run_ts
+            2,                                  // rta_seconds placeholder since it doesn't seem to work
+            // parseHMS(row[iRta]),             // $4 rta_seconds
             parseHMS(row[iIgtA] ?? row[iIgtB]), // $5 igt_seconds
             get(row, iSeed) ?? null,            // $6 seed
             get(row, iSpawnBiome) ?? null,      // $7 spawn_biome
