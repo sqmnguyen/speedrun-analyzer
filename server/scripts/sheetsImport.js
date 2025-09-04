@@ -10,20 +10,21 @@ const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}
 const sql = `
   INSERT INTO runs (
     id,            -- $1
-    run_ts,        -- $2
-    rta_seconds,   -- $3
-    igt_seconds,   -- $4
-    seed,          -- $5
-    spawn_biome,   -- $6
-    iron_source,   -- $7
-    enter_type,    -- $8
-    gold_source,   -- $9
-    bastion_type,  -- $10
-    end_fight_type,-- $11
-    recent_version,-- $12
-    notes          -- $13
+    run_number,     -- $2
+    run_ts,        -- $3
+    rta_seconds,   -- $4
+    igt_seconds,   -- $5
+    seed,          -- $6
+    spawn_biome,   -- $7
+    iron_source,   -- $8
+    enter_type,    -- $9
+    gold_source,   -- $10
+    bastion_type,  -- $11
+    end_fight_type,-- $12
+    recent_version,-- $13
+    notes          -- $14
   )
-  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 `;
 
 const main = async () => {
@@ -32,7 +33,10 @@ const main = async () => {
     const { values = [] } = await r.json();
     if (values.length < 2) return console.log("No rows");
 
-    const [headers, ...rows] = values;
+    // actual data starts on 4th row
+    const headers = values[0];      // row 1 = headers
+    const rows    = values.slice(3); // rows 4..N = data
+
     const idx = (h) => headers.indexOf(h);
 
     // header indices
@@ -65,12 +69,25 @@ const main = async () => {
         return isNaN(d) ? null : d.toISOString();
     };
 
-    const toIgt = (row) => {
-        const a = get(row, iIgtA);
-        const b = get(row, iIgtB);
-        const val = a ?? b;
-        return toNumber(val);
+    // const toIgt = (row) => {
+    //     const a = get(row, iIgtA);
+    //     const b = get(row, iIgtB);
+    //     const val = a ?? b;
+    //     return toNumber(val);
+    // };
+
+    const toInt = (v) => v == null || v === '' ? null : Number(String(v).replace(/,/g,''));
+
+    const parseHMS = (v) => {
+        if (!v) return null;
+        const s = String(v).trim();
+        if (/^\d+(\.\d+)?$/.test(s)) return Number(s); // already seconds
+        const m = s.match(/^(\d{1,2}):([0-5]?\d)(?::([0-5]?\d))?$/);
+        if (!m) return null;
+        const [, a, b, c] = m.map(Number);
+        return c != null ? a*3600 + b*60 + c : a*60 + b;
     };
+
 
     const client = await pool.connect();
     try {
@@ -82,19 +99,20 @@ const main = async () => {
         if (!sheetId) continue;
 
         await client.query(sql, [
-            sheetId,                            // $1 id
-            toIso(get(row, iRunTs)),            // $2 run_ts
-            toNumber(get(row, iRta)),           // $3 rta_seconds
-            toIgt(row),                         // $4 igt_seconds
-            get(row, iSeed) ?? null,            // $5 seed
-            get(row, iSpawnBiome) ?? null,      // $6 spawn_biome
-            get(row, iIronSource) ?? null,      // $7 iron_source
-            get(row, iEnterType) ?? null,       // $8 enter_type
-            get(row, iGoldSource) ?? null,      // $9 gold_source
-            get(row, iBastionType) ?? null,     // $10 bastion_type
-            get(row, iEndFightType) ?? null,    // $11 end_fight_type
-            toBool(get(row, iRecentVersion)),   // $12 recent_version
-            get(row, iNotes) ?? null,           // $13 notes
+            toInt(row[iId]),                         // $1 id
+            toInt(row[iId]),
+            toIso(row[iRunTs]),                   // $3 run_ts
+            parseHMS(row[iRta]),                // $4 rta_seconds
+            parseHMS(row[iIgtA] ?? row[iIgtB]), // $5 igt_seconds
+            get(row, iSeed) ?? null,            // $6 seed
+            get(row, iSpawnBiome) ?? null,      // $7 spawn_biome
+            get(row, iIronSource) ?? null,      // $8 iron_source
+            get(row, iEnterType) ?? null,       // $9 enter_type
+            get(row, iGoldSource) ?? null,      // $10 gold_source
+            get(row, iBastionType) ?? null,     // $11 bastion_type
+            get(row, iEndFightType) ?? null,    // $12 end_fight_type
+            toBool(get(row, iRecentVersion)),   // $13 recent_version
+            get(row, iNotes) ?? null,           // $14 notes
         ]);
 
         count++;

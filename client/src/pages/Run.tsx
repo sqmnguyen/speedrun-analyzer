@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 const SPREADSHEET_ID =
-  "1Tyw9fwdZgsHJoHzlE-0LPSEDOduRkZwL2UUNA-_4Xo4"; // your sheet
-const RANGE = "Raw Data"; // change to the tab name you want
+  "placeholder"; 
+const RANGE = "placeholder"; 
 
 export default function RunPage() {
   const [headers, setHeaders] = useState<string[]>([]);
@@ -12,8 +12,8 @@ export default function RunPage() {
   
 
   useEffect(() => {
-    const apiKey =
-      "AIzaSyCRQ0y8ZYrBSo1qSGBim5Xg4ymHNlfTnK4";
+    const apiKey = "placeholder"
+      
     if (!apiKey) {
       setErr("Missing Google API key");
       setLoading(false);
