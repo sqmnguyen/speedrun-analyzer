@@ -1,0 +1,31 @@
+{
+  "name": "couriway-tracker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate:create": "node-pg-migrate create",
+    "migrate:up": "node-pg-migrate up -m migrations",
+    "migrate:down": "node-pg-migrate down -m migrations"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "dotenv": "^17.2.1",
+    "node-pg-migrate": "^8.0.3",
+    "pg": "^8.16.3"
+  },
+  "node-pg-migrate": {
+    "databaseUrl": {
+      "env": "DATABASE_URL"
+    }
+  }
+}
